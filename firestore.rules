@@ -1,0 +1,307 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for Authentication & RBAC
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserEmail() {
+      return (request.auth != null && 'email' in request.auth.token && request.auth.token.email != null) ? request.auth.token.email.lower() : '';
+    }
+
+    // Kiểm tra tài khoản cán bộ hợp lệ đã được phê duyệt trong hệ thống
+    function hasSystemAccount() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/system_accounts/$(getUserEmail()));
+    }
+
+    function getAccountData() {
+      return get(/databases/$(database)/documents/system_accounts/$(getUserEmail())).data;
+    }
+
+    // Level 4: Ban Thường vụ Đoàn trường / Quản trị viên tối cao (Tài khoản Cấp 4 có quyền cao nhất)
+    function isLevel4Admin() {
+      return isSignedIn() && (
+        getUserEmail() == 'conghau.nlu@gmail.com' ||
+        getUserEmail() == 'admin@tuoitrenonglam.com' ||
+        (hasSystemAccount() && 'roleLevel' in getAccountData() && getAccountData().roleLevel == 4 && (!('status' in getAccountData()) || getAccountData().status == 'Active'))
+      );
+    }
+
+    // Level 3: Ban Chấp hành Đoàn Khoa
+    function isStaffLevel3() {
+      return isLevel4Admin() || (
+        hasSystemAccount() &&
+        'roleLevel' in getAccountData() &&
+        getAccountData().roleLevel >= 3 &&
+        (!('status' in getAccountData()) || getAccountData().status == 'Active')
+      );
+    }
+
+    // Level 2: Ban Chấp hành Chi đoàn, Ban Chủ nhiệm CLB/Đội/Nhóm
+    function isStaffLevel2() {
+      return isLevel4Admin() || (
+        hasSystemAccount() &&
+        'roleLevel' in getAccountData() &&
+        getAccountData().roleLevel >= 2 &&
+        (!('status' in getAccountData()) || getAccountData().status == 'Active')
+      );
+    }
+
+    // isStaff(): Cán bộ quản lý từ Cấp 2 trở lên
+    function isStaff() {
+      return isStaffLevel2();
+    }
+
+    // Mã đơn vị trực thuộc của cán bộ
+    function getStaffOrg() {
+      return hasSystemAccount() ? getAccountData().orgCode : '';
+    }
+
+    // Mã lớp phụ trách của cán bộ chi đoàn
+    function getStaffClass() {
+      return (hasSystemAccount() && ('classCode' in getAccountData())) ? getAccountData().classCode : '';
+    }
+
+    // Kiểm tra sinh viên chính chủ đối soát chính xác theo Firebase UID hoặc email đăng ký chính thức
+    function isStudentSelf(studentDoc, studentId) {
+      return isSignedIn() && (
+        ('uid' in studentDoc && studentDoc.uid == request.auth.uid) ||
+        ('userId' in studentDoc && studentDoc.userId == request.auth.uid) ||
+        ('email' in studentDoc && studentDoc.email.lower() == getUserEmail()) ||
+        (getUserEmail() == (studentId.lower() + '@hcmuaf.edu.vn')) ||
+        (getUserEmail() == (studentId.lower() + '@st.hcmuaf.edu.vn'))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Mặc định từ chối mọi truy cập trái phép
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // 1. ACTIVITIES COLLECTION (HOẠT ĐỘNG ĐOÀN - HỘI & PHÊ DUYỆT ĐA CẤP)
+    // =========================================================================
+    match /activities/{activityId} {
+      allow get, list: if true;
+
+      allow create: if isValidId(activityId)
+        && (isLevel4Admin() || isStaffLevel3() || isStaffLevel2())
+        && request.resource.data.id is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && 'orgCode' in request.resource.data
+        && request.resource.data.orgCode is string
+        && request.resource.data.orgCode.size() > 0
+        && (
+          isLevel4Admin() ||
+          (isStaffLevel3() && request.resource.data.orgCode == getStaffOrg()) ||
+          (isStaffLevel2() && (request.resource.data.orgCode == getStaffOrg() || request.resource.data.branchClass == getStaffClass()))
+        )
+        && (isLevel4Admin() || !('status' in request.resource.data) || request.resource.data.status in ['Pending_L3', 'Pending_L4'])
+        && (!('createdEmail' in request.resource.data) || request.resource.data.createdEmail == getUserEmail());
+
+      allow update: if isValidId(activityId) && (
+        isLevel4Admin() ||
+        (
+          isStaff() &&
+          (!('isLocked' in resource.data) || resource.data.isLocked == false) &&
+          request.resource.data.orgCode == resource.data.orgCode &&
+          (
+            (isStaffLevel3() && resource.data.orgCode == getStaffOrg()) ||
+            (isStaffLevel2() && (resource.data.orgCode == getStaffOrg() || resource.data.branchClass == getStaffClass()))
+          )
+        )
+      );
+
+      allow delete: if isValidId(activityId) && (
+        isLevel4Admin() ||
+        (
+          isStaffLevel3() &&
+          (!('isLocked' in resource.data) || resource.data.isLocked == false) &&
+          resource.data.orgCode == getStaffOrg()
+        )
+      );
+    }
+
+    // =========================================================================
+    // 2. STUDENTS COLLECTION (HỒ SƠ & ĐIỂM RÈN LUYỆN SINH VIÊN BẢO MẬT)
+    // =========================================================================
+    match /students/{studentId} {
+      allow get: if isLevel4Admin() ||
+        (isStaffLevel3() && resource.data.facultyCode == getStaffOrg()) ||
+        (isStaffLevel2() && (resource.data.classCode == getStaffClass() || resource.data.facultyCode == getStaffOrg())) ||
+        isStudentSelf(resource.data, studentId);
+
+      // Giới hạn query/list theo phạm vi trường (L4), khoa (L3), lớp (L2) hoặc chính chủ
+      allow list: if isSignedIn() && (
+        isLevel4Admin() ||
+        (isStaffLevel3() && resource.data.facultyCode == getStaffOrg()) ||
+        (isStaffLevel2() && resource.data.classCode == getStaffClass()) ||
+        isStudentSelf(resource.data, studentId)
+      );
+
+      allow create: if isValidId(studentId)
+        && (
+          isLevel4Admin() ||
+          (
+            (
+              (isStaffLevel3() && request.resource.data.facultyCode == getStaffOrg()) ||
+              (isStaffLevel2() && request.resource.data.classCode == getStaffClass())
+            )
+            && request.resource.data.studentId is string
+            && request.resource.data.studentId.size() > 0
+          )
+        );
+
+      allow update: if isValidId(studentId)
+        && (
+          isLevel4Admin() ||
+          (
+            request.resource.data.studentId == resource.data.studentId &&
+            (!('totalScore' in request.resource.data) || request.resource.data.totalScore >= 0) &&
+            (
+              (isStaffLevel3() && resource.data.facultyCode == getStaffOrg()) ||
+              (isStaffLevel2() && resource.data.classCode == getStaffClass()) ||
+              (
+                isStudentSelf(resource.data, studentId) &&
+                request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                  'selfProofs', 'phone', 'avatarUrl', 'updatedAt'
+                ])
+              )
+            )
+          )
+        );
+
+      allow delete: if isLevel4Admin() && isValidId(studentId);
+    }
+
+    // =========================================================================
+    // 3. SYSTEM ACTIVITY LOGS (NHẬT KÝ HỆ THỐNG - CHỐNG GIẢ MẠO)
+    // =========================================================================
+    match /system_activity_logs/{logId} {
+      allow get, list: if isLevel4Admin();
+      allow create: if isSignedIn()
+        && isValidId(logId)
+        && request.resource.data.category is string
+        && request.resource.data.actionTitle is string;
+      allow update, delete: if isLevel4Admin();
+    }
+
+    // =========================================================================
+    // 4. SCORE AUDIT LOGS (VẾT KIỂM TOÁN ĐIỂM - CHỐNG GIẢ MẠO)
+    // =========================================================================
+    match /score_audit_logs/{logId} {
+      allow get, list: if isStaff() || (isSignedIn() && isStudentSelf(resource.data, resource.data.studentId));
+      allow create: if isStaff()
+        && isValidId(logId)
+        && request.resource.data.studentId is string;
+      allow update, delete: if isLevel4Admin();
+    }
+
+    // =========================================================================
+    // AUDIT LOGS (VẾT KIỂM TOÁN CẬP NHẬT ĐOÀN VIÊN / SINH VIÊN - CHỐNG MẤT DỮ LIỆU)
+    // =========================================================================
+    match /audit_logs/{logId} {
+      allow get, list: if isStaff() || isLevel4Admin();
+      allow create: if isSignedIn()
+        && isValidId(logId)
+        && request.resource.data.studentId is string;
+      allow update, delete: if isLevel4Admin();
+    }
+
+
+    // =========================================================================
+    // 5. SYSTEM ACCOUNTS (PHÂN QUYỀN VAI TRÒ CÁN BỘ - RBAC)
+    // =========================================================================
+    match /system_accounts/{accountId} {
+      allow get: if isLevel4Admin() || (isSignedIn() && getUserEmail() == accountId.lower());
+      allow list: if isLevel4Admin();
+      allow create, update, delete: if isLevel4Admin() && isValidId(accountId);
+    }
+
+    // =========================================================================
+    // 6. ISSUED CERTIFICATES (GIẤY CHỨNG NHẬN ĐIỆN TỬ - BẢO VỆ TRA CỨU)
+    // =========================================================================
+    match /issued_certificates/{certId} {
+      allow get: if isSignedIn();
+      allow list: if isStaff() || (
+        isSignedIn() && (
+          resource.data.studentId == request.auth.uid ||
+          ('uid' in resource.data && resource.data.uid == request.auth.uid) ||
+          ('studentEmail' in resource.data && resource.data.studentEmail.lower() == getUserEmail()) ||
+          (getUserEmail() == (resource.data.studentId.lower() + '@hcmuaf.edu.vn')) ||
+          (getUserEmail() == (resource.data.studentId.lower() + '@st.hcmuaf.edu.vn'))
+        )
+      );
+      allow create, update, delete: if isStaffLevel3() && isValidId(certId);
+    }
+
+    // =========================================================================
+    // 7. SYSTEM META & CONFIGURATION (CẤU HÌNH GIAO DIỆN & DANH MỤC TỪ NGỮ)
+    // =========================================================================
+    match /system_meta/{metaDocId} {
+      allow read: if isSignedIn();
+      allow write: if isLevel4Admin();
+    }
+
+    // =========================================================================
+    // 8. ATTENDANCE RECORDS (ĐIỂM DANH HOẠT ĐỘNG QUA MÃ QR & PHIÊN LÀM VIỆC)
+    // =========================================================================
+    match /attendance_records/{attendanceId} {
+      allow get, list: if isStaff() || (
+        isSignedIn() && (
+          resource.data.studentId == request.auth.uid ||
+          (getUserEmail() == (resource.data.studentId.lower() + '@hcmuaf.edu.vn')) ||
+          (getUserEmail() == (resource.data.studentId.lower() + '@st.hcmuaf.edu.vn')) ||
+          ('uid' in resource.data && resource.data.uid == request.auth.uid)
+        )
+      );
+
+      allow create: if isSignedIn()
+        && isValidId(attendanceId)
+        && request.resource.data.activityId is string
+        && request.resource.data.studentId is string;
+
+      allow update: if isValidId(attendanceId)
+        && (
+          isLevel4Admin() ||
+          (isStaffLevel3() && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.facultyCode == getStaffOrg()) ||
+          (isStaffLevel2() && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.classCode == getStaffClass())
+        );
+
+      allow delete: if isLevel4Admin() && isValidId(attendanceId);
+    }
+
+    // =========================================================================
+    // 9. TARGETS COLLECTION (DANH MỤC CHỈ TIÊU & PHÂN BỔ ĐA TẦNG)
+    // =========================================================================
+    match /targets/{targetId} {
+      allow read: if isSignedIn();
+
+      allow create: if (isLevel4Admin() || isStaffLevel3())
+        && isValidId(targetId)
+        && request.resource.data.id is string;
+
+      allow update: if isValidId(targetId) && (
+        isLevel4Admin() ||
+        (
+          isStaff() &&
+          (!('isLocked' in resource.data) || resource.data.isLocked == false) &&
+          (
+            isStaffLevel3() && (resource.data.level in ['KHOA', 'CHI_DOAN_CLB']) ||
+            (isStaffLevel2() && resource.data.level == 'CHI_DOAN_CLB')
+          )
+        )
+      );
+
+      allow delete: if isLevel4Admin() && isValidId(targetId);
+    }
+  }
+}

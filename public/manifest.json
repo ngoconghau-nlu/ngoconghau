@@ -1,0 +1,65 @@
+{
+  "id": "/",
+  "name": "NLU Youth 2026 - Quản lý Hoạt động & Điểm Rèn luyện",
+  "short_name": "NLU Youth",
+  "description": "Hệ thống quản lý hoạt động Đoàn - Hội, tính điểm rèn luyện và xếp loại đoàn viên, sinh viên Đại học Nông Lâm TP.HCM.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#064e3b",
+  "theme_color": "#047857",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cổng Sinh Viên",
+      "short_name": "Cổng SV",
+      "description": "Tra cứu điểm rèn luyện và nộp minh chứng",
+      "url": "/#student-portal",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Sổ Điểm Rèn Luyện",
+      "short_name": "Sổ Điểm",
+      "description": "Xem danh sách và xếp loại đoàn viên, sinh viên",
+      "url": "/#score-roster",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

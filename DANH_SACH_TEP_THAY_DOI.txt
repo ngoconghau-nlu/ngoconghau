@@ -1,0 +1,77 @@
+================================================================================
+DANH SÁCH CÁC TỆP THAY ĐỔI VÀ TẠO MỚI - NLU YOUTH 2026
+================================================================================
+
+1. CÁC TỆP TẠO MỚI (NEW FILES):
+--------------------------------------------------------------------------------
+- src/config/navigationConfig.ts
+  + Mục đích: Cấu hình điều hướng tập trung toàn hệ thống (CANONICAL_NAVIGATION_CONFIG).
+  + Định nghĩa đầy đủ 11 phân hệ, các phân hệ con, icon, phân quyền, từ khóa tìm kiếm.
+
+- src/components/header/AppHeader.tsx
+  + Mục đích: Main container cho toàn bộ Header NLU Youth 2026.
+  + Điều phối Top Banner, BrandSection, DesktopNavigation, MobileNavigationDrawer,
+    NavigationSearch và các modal hệ thống.
+
+- src/components/header/BrandSection.tsx
+  + Mục đích: Component nhận diện thương hiệu, logo NLU, tên hệ thống và nút mở modal
+    chỉnh sửa logo Cấp 4.
+
+- src/components/header/DesktopNavigation.tsx
+  + Mục đích: Thanh menu ngang trên desktop và tablet, ủy quyền hiển thị cho NavigationGroup
+    và NavigationItem, tích hợp menu thả cấu hình Cấp 4.
+
+- src/components/header/MobileNavigationDrawer.tsx
+  + Mục đích: Ngăn kéo di động đầy đủ (Mobile Drawer), accordion sub-menus, tự động mở nhóm
+    chứa chức năng active, vùng chạm >= 44px.
+
+- src/components/header/NavigationGroup.tsx
+  + Mục đích: Quản lý nhóm menu phân hệ có chức năng con, trigger dropdown popover và định tuyến.
+
+- src/components/header/NavigationItem.tsx
+  + Mục đích: Component nút điều hướng đơn lẻ tinh gọn, viền dưới active, focus-visible.
+
+- src/components/header/HeaderActions.tsx
+  + Mục đích: Cụm công cụ tiện ích desktop: PWA Install, Trợ giúp, Dark/Light Mode, Đồng bộ,
+    Sao lưu Drive, Thùng rác.
+
+- src/components/header/UserProfileMenu.tsx
+  + Mục đích: Quản lý danh tính Google SSO, huy hiệu phân quyền Cấp 0-4 và chuyển đổi vai trò.
+
+- src/components/header/NavigationSearch.tsx
+  + Mục đích: Hộp thoại tìm kiếm phân hệ nhanh qua phím tắt Cmd+K / Ctrl+K và bàn phím.
+
+- src/components/header/index.ts
+  + Mục đích: Barrel export chuẩn cho toàn bộ thư mục header.
+
+- BAO_CAO_RA_SOAT.txt
+  + Mục đích: Báo cáo rà soát kiến trúc, khắc phục lỗi điều hướng và kiểm thử hệ thống.
+
+- DANH_SACH_TEP_THAY_DOI.txt
+  + Mục đích: Bảng kê danh mục tệp thay đổi và vai trò từng tệp.
+
+- README.md
+  + Mục đích: Tài liệu kiến trúc dự án, mô tả cấu trúc menu và hướng dẫn vận hành.
+
+- THAY_DOI.patch
+  + Mục đích: Bản patch tổng hợp toàn bộ các thay đổi mã nguồn.
+
+
+2. CÁC TỆP CẬP NHẬT (UPDATED FILES):
+--------------------------------------------------------------------------------
+- src/components/Header.tsx
+  + Thay đổi: Tái cấu trúc thành wrapper re-export AppHeader và duy trì 100% tương thích ngược
+    cho các export cũ (SECTION_SUMMARIES, SUB_MENU_MAP, getSectionInfo).
+
+- src/components/MenuEditorModal.tsx
+  + Thay đổi: Bổ sung nút bấm ArrowUp và ArrowDown sắp xếp thứ tự menu trực quan;
+    hỗ trợ phím tắt Alt + ArrowUp và Alt + ArrowDown khi focus hàng.
+
+- src/App.tsx
+  + Thay đổi: Tích hợp AppHeader trực tiếp; áp dụng React.lazy và Suspense cho 11 phân hệ lớn;
+    khắc phục liên kết system-catalogs trỏ đúng ScoringCatalogsManagement;
+    khắc phục liên kết checkin-qr trỏ đúng StudentCheckIn (embeddedMode).
+
+================================================================================
+TỔNG KẾT: 15 TỆP TẠO MỚI / 3 TỆP CẬP NHẬT - BUILD HOÀN TOÀN THÀNH CÔNG
+================================================================================

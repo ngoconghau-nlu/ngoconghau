@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme {
+  /* NLU Forest & Emerald Greens Palette */
+  --color-nlu-50: #ecfdf5;
+  --color-nlu-100: #d1fae5;
+  --color-nlu-200: #a7f3d0;
+  --color-nlu-300: #6ee7b7;
+  --color-nlu-400: #34d399;
+  --color-nlu-500: #10b981;
+  --color-nlu-600: #059669;
+  --color-nlu-700: #047857;
+  --color-nlu-800: #065f46;
+  --color-nlu-900: #064e3b;
+  --color-nlu-950: #022c22;
+
+  /* NLU Youth Blue Palette */
+  --color-youth-50: #f0f9ff;
+  --color-youth-100: #e0f2fe;
+  --color-youth-200: #bae6fd;
+  --color-youth-300: #7dd3fc;
+  --color-youth-400: #38bdf8;
+  --color-youth-500: #0ea5e9;
+  --color-youth-600: #0284c7;
+  --color-youth-700: #0369a1;
+  --color-youth-800: #075985;
+  --color-youth-900: #0c4a6e;
+
+  /* Harvest & Honor Gold Palette */
+  --color-gold-50: #fefce8;
+  --color-gold-100: #fef9c3;
+  --color-gold-200: #fef08a;
+  --color-gold-300: #fde047;
+  --color-gold-400: #facc15;
+  --color-gold-500: #eab308;
+  --color-gold-600: #ca8a04;
+  --color-gold-700: #a16207;
+  --color-gold-800: #854d0e;
+  --color-gold-900: #713f12;
+
+  /* Design Tokens - Shadows */
+  --shadow-nlu-glow-sm: 0 2px 10px -1px rgba(4, 120, 87, 0.25);
+  --shadow-nlu-glow: 0 8px 24px -4px rgba(4, 120, 87, 0.32);
+  --shadow-nlu-glow-lg: 0 12px 32px -4px rgba(4, 120, 87, 0.45);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 6px 12px -4px rgba(0, 0, 0, 0.04);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom scrollbars & smooth theme transitions */
+html.dark {
+  color-scheme: dark;
+}
+
+html {
+  font-size: 18px; /* Tăng kích thước font chữ cơ sở +2px (16px -> 18px) để tối ưu hiển thị */
+}
+
+html, body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Skeleton Shimmer Wave Effect */
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(241 245 249 / 0.85); /* slate-100 */
+}
+
+:is(.dark .skeleton-shimmer) {
+  background-color: rgb(30 41 59 / 0.65); /* slate-800 */
+}
+
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+:is(.dark .skeleton-shimmer)::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+}
+
+/* Smooth pulse for skeleton cards */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-skeleton-pulse {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Subtle slide-in animation for navigation sub-menu items */
+@keyframes submenu-item-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px) translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+.animate-submenu-item-slide-in {
+  animation: submenu-item-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Hide scrollbar / slider across browsers */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+

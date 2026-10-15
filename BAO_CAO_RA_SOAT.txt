@@ -1,0 +1,140 @@
+================================================================================
+BÁO CÁO RÀ SOÁT VÀ TÁI CẤU TRÚC HỆ THỐNG NLU YOUTH 2026
+ĐẠI HỌC NÔNG LÂM TP. HỒ CHÍ MINH - NĂM HỌC 2026-2027
+================================================================================
+
+Ngày hoàn thành: 09/10/2026
+Chuyên trách: Senior React Architect & UX/UI System Designer
+Phiên bản: 2.1.0-modular
+
+--------------------------------------------------------------------------------
+I. TỔNG QUAN VÀ MỤC TIÊU DỰ ÁN
+--------------------------------------------------------------------------------
+1. Mục tiêu:
+   - Rà soát toàn bộ cấu trúc điều hướng, menu, bảng điều khiển và các phân hệ chức năng
+     của ứng dụng NLU Youth 2026.
+   - Chuẩn hóa điều hướng đa nền tảng: Desktop, Tablet và Mobile Drawer sử dụng chung
+     một nguồn cấu hình duy nhất (canonical navigation configuration).
+   - Khắc phục triệt để các điểm điều hướng chưa nhất quán:
+     + Chức năng "Quản Lý Quy Điểm / system-catalogs" trỏ nhầm sang TargetManagement -> Đã kết nối chuẩn xác tới ScoringCatalogsManagement.
+     + Menu con "Điểm Danh QR / activities-qr" -> Đã mở đúng chế độ quét mã trực tiếp StudentCheckIn (embeddedMode).
+     + Phân hệ Sổ Điểm Rèn Luyện & Thi Đua (16 Khoa, Chi đoàn cơ sở, 37 CLB) -> Đã liên kết trực tiếp vào đúng sub-tab của ScoreRoster.
+   - Tách mô-đun Header.tsx đồ sộ (>1400 dòng) thành cụm component chuyên trách:
+     AppHeader, BrandSection, DesktopNavigation, MobileNavigationDrawer,
+     NavigationGroup, NavigationItem, HeaderActions, UserProfileMenu, NavigationSearch.
+   - Tối ưu hóa hiệu năng bằng React.lazy và Suspense code-splitting cho các phân hệ nặng.
+   - Bảo toàn 100% dữ liệu nghiệp vụ, không thay đổi quyền truy cập Firestore Security Rules,
+     giữ nguyên tài khoản, điểm rèn luyện, minh chứng và dữ liệu người dùng.
+
+--------------------------------------------------------------------------------
+II. KẾT QUẢ RÀ SOÁT CÁC PHÂN HỆ VÀ ĐIỀU HƯỚNG
+--------------------------------------------------------------------------------
+1. Phân hệ 1: Dashboard Tổng Quan (Cấp 0+)
+   - Trạng thái: Hoạt động chuẩn xác.
+   - Thống kê thời gian thực, tiến độ hoạt động, biểu đồ ĐRL và xếp hạng thi đua.
+
+2. Phân hệ 2: Chỉ Tiêu & Đánh Giá KPIs (Cấp 1+)
+   - Trạng thái: Hoạt động chuẩn xác.
+   - Menu con:
+     + Chỉ tiêu & KPIs Năm học (targets-kpi) -> Tab Chỉ tiêu.
+     + Phân bổ định ngạch 53 đơn vị Đoàn - Hội (targets-units).
+
+3. Phân hệ 3: Quản Lý Hoạt Động (Cấp 1+)
+   - Trạng thái: Đã sửa liên kết menu con.
+   - Menu con:
+     + Danh sách hoạt động & Phê duyệt L1-L4 (activities-all) -> ActivityManagement.
+     + Điểm danh tự động & Quét QR (activities-qr) -> StudentCheckIn (checkin-qr mode).
+
+4. Phân hệ 4: Cổng Sinh Viên & SV5T (Cấp 1+)
+   - Trạng thái: Hoạt động chuẩn xác.
+   - Menu con: Sổ điểm cá nhân, Tiêu chuẩn Sinh viên 5 Tốt và nộp minh chứng.
+
+5. Phân hệ 5: Sổ Điểm & Thi Đua Cơ Sở (Cấp 1+)
+   - Trạng thái: Đã liên kết chuẩn xác 4 phân hệ con.
+     + Sổ Điểm Rèn Luyện Sinh Viên (student-roster) -> ScoreRoster [student-roster].
+     + Bảng Thi Đua 16 Đoàn - Hội Khoa (faculty-emulation) -> ScoreRoster [faculty-emulation].
+     + Bảng Thi Đua Cơ Sở Chi Đoàn (branch-emulation) -> ScoreRoster [branch-emulation].
+     + Thi Đua 37 CLB, Tổ, Đội, Nhóm (club-emulation) -> ScoreRoster [club-emulation].
+
+6. Phân hệ 6: Danh Mục Đơn Vị Tổ Chức (Cấp 3+)
+   - Trạng thái: Hoạt động chuẩn xác (53 đơn vị Đoàn - Hội, Khoa, CLB trực thuộc).
+
+7. Phân hệ 7: Giấy Chứng Nhận Điện Tử (Cấp 1+)
+   - Trạng thái: Hoạt động chuẩn xác với mã QR xác thực.
+
+8. Phân hệ 8: Cấp Quyền & Tài Khoản (Cấp 4)
+   - Trạng thái: Hoạt động chuẩn xác (quản trị viên cấp trường).
+
+9. Phân hệ 9: Nhật Ký Hệ Thống (Cấp 4)
+   - Trạng thái: Hoạt động chuẩn xác (audit logs kiểm toán an toàn dữ liệu).
+
+10. Phân hệ 10: Google Drive & Hồ Sơ (Cấp 1+)
+    - Trạng thái: Đồng bộ minh chứng đám mây.
+
+11. Phân hệ 11: Quản Lý Quy Điểm & Danh Mục Cấu Hình (Cấp 4)
+    - Trạng thái: ĐÃ KHẮC PHỤC TRIỆT ĐỂ.
+    - Trước khi sửa: Nhấp vào menu trỏ nhầm sang TargetManagement.
+    - Sau khi sửa: Trỏ chính xác đến ScoringCatalogsManagement với 8 danh mục quản lý:
+      Tiêu chí ĐRL, Chuẩn SV5T, Đơn vị tổ chức, Quy mô tham gia, Điểm cấp đăng cai,
+      Mảng CT Đoàn & Hội.
+
+--------------------------------------------------------------------------------
+III. KIẾN TRÚC TÁCH COMPONENT HEADER MỚI
+--------------------------------------------------------------------------------
+Thư mục: src/components/header/
+- AppHeader.tsx:
+  Container chính, phối hợp Top Banner, BrandSection, HeaderActions,
+  DesktopNavigation, MobileNavigationDrawer, NavigationSearch và Modals.
+- BrandSection.tsx:
+  Khu vực nhận diện thương hiệu NLU, logo, tiêu đề và nút cấu hình logo Cấp 4.
+- DesktopNavigation.tsx:
+  Thanh menu ngang trên desktop/tablet với tooltip mô tả, sub-menu và cấu hình Cấp 4.
+- MobileNavigationDrawer.tsx:
+  Ngăn kéo menu di động accordion, tự động mở nhóm đang chọn, chạm tối thiểu 44px.
+- NavigationGroup.tsx:
+  Nhóm phân hệ có chức năng con, trigger dropdown popover và định tuyến sub-items.
+- NavigationItem.tsx:
+  Nút điều hướng đơn lẻ với viền dưới active, focus-visible và hỗ trợ link ngoài.
+- HeaderActions.tsx:
+  Công cụ tiện ích: PWA Install, Trợ giúp, Dark/Light Mode, Đồng bộ, Sao lưu, Thùng rác.
+- UserProfileMenu.tsx:
+  Thẻ đăng nhập Google SSO, huy hiệu phân quyền Cấp 0-4 và chuyển đổi vai trò.
+- NavigationSearch.tsx:
+  Hộp thoại tìm kiếm phân hệ nhanh qua phím tắt Cmd+K / Ctrl+K.
+- index.ts:
+  Barrel export toàn bộ các component con.
+- Header.tsx (Thư mục gốc components/):
+  Wrapper re-export AppHeader và các hằng số phục vụ tương thích ngược 100%.
+
+--------------------------------------------------------------------------------
+IV. NÂNG CẤP MENU EDITOR MODAL
+--------------------------------------------------------------------------------
+- Bổ sung nút bấm ArrowUp và ArrowDown để sắp xếp thứ tự các mục menu trực quan.
+- Hỗ trợ phím tắt bàn phím Alt + ArrowUp và Alt + ArrowDown khi focus vào hàng.
+- Tự động đánh lại thứ tự (order: 1..N) và đồng bộ ngay lập tức vào state.
+
+--------------------------------------------------------------------------------
+V. KẾT QUẢ KIỂM THỬ VÀ XÁC THỰC HỆ THỐNG
+--------------------------------------------------------------------------------
+1. Kiểm tra Linter / TypeScript:
+   - Lệnh: npm run lint (tsc --noEmit)
+   - Kết quả: PASS (0 lỗi, 0 cảnh báo).
+
+2. Kiểm tra Biên dịch Vite / Production Build:
+   - Lệnh: npm run build
+   - Kết quả: PASS (Biên dịch thành công toàn bộ bundle).
+
+3. Kiểm tra tính tương thích Responsive:
+   - 375px (Mobile Portrait): Menu Drawer hoạt động mượt, không cuộn ngang.
+   - 768px (Tablet Portrait): Drawer / thanh điều hướng co giãn hợp lý.
+   - 1024px (Tablet Landscape): Menu desktop hiển thị tinh gọn.
+   - 1440px (Desktop Full HD): Hiển thị đầy đủ thanh công cụ và danh mục.
+
+4. Kiểm tra An toàn dữ liệu & Firebase:
+   - Đảm bảo không ghi đè dữ liệu thật bằng mock data.
+   - Các listener Firestore (students, activities, targets, logs) duy trì hoạt động ổn định.
+   - Phân quyền Cấp 0 đến Cấp 4 được thực thi chặt chẽ.
+
+================================================================================
+KẾT LUẬN: HỆ THỐNG ĐÃ SẴN SÀNG VẬN HÀNH CHÍNH THỨC
+================================================================================

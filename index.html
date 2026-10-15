@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Bỏ qua lỗi kết nối HMR WebSocket vô hại trong môi trường proxy container của AI Studio
+      (function() {
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          var OrigWebSocket = window.WebSocket;
+          var PatchedWebSocket = function(url, protocols) {
+            var ws;
+            try {
+              ws = protocols !== undefined ? new OrigWebSocket(url, protocols) : new OrigWebSocket(url);
+            } catch (err) {
+              return {
+                addEventListener: function() {},
+                removeEventListener: function() {},
+                send: function() {},
+                close: function() {},
+                readyState: 3
+              };
+            }
+            var origAdd = ws.addEventListener;
+            var hasOpened = false;
+            if (origAdd) {
+              origAdd.call(ws, 'open', function() {
+                hasOpened = true;
+              });
+              ws.addEventListener = function(type, listener, options) {
+                if (type === 'close') {
+                  var safeCloseListener = function() {
+                    if (!hasOpened) {
+                      // Bỏ qua lỗi "WebSocket closed without opened" từ @vite/client
+                      return;
+                    }
+                    try {
+                      return listener.apply(this, arguments);
+                    } catch (e) {}
+                  };
+                  return origAdd.call(this, type, safeCloseListener, options);
+                }
+                if (type === 'error') {
+                  var safeErrorListener = function() {
+                    if (!hasOpened) {
+                      return;
+                    }
+                    try {
+                      return listener.apply(this, arguments);
+                    } catch (e) {}
+                  };
+                  return origAdd.call(this, type, safeErrorListener, options);
+                }
+                return origAdd.call(this, type, listener, options);
+              };
+            }
+            try {
+              Object.defineProperty(ws, 'onclose', {
+                configurable: true,
+                get: function() { return this._onclose; },
+                set: function(fn) {
+                  this._onclose = function() {
+                    if (!hasOpened) return;
+                    try { fn.apply(this, arguments); } catch (e) {}
+                  };
+                }
+              });
+              Object.defineProperty(ws, 'onerror', {
+                configurable: true,
+                get: function() { return this._onerror; },
+                set: function(fn) {
+                  this._onerror = function() {
+                    if (!hasOpened) return;
+                    try { fn.apply(this, arguments); } catch (e) {}
+                  };
+                }
+              });
+            } catch (e) {}
+            return ws;
+          };
+          PatchedWebSocket.prototype = OrigWebSocket.prototype;
+          PatchedWebSocket.CONNECTING = OrigWebSocket.CONNECTING || 0;
+          PatchedWebSocket.OPEN = OrigWebSocket.OPEN || 1;
+          PatchedWebSocket.CLOSING = OrigWebSocket.CLOSING || 2;
+          PatchedWebSocket.CLOSED = OrigWebSocket.CLOSED || 3;
+          window.WebSocket = PatchedWebSocket;
+        }
+
+        var origConsoleError = console.error;
+        console.error = function() {
+          var str = '';
+          for (var i = 0; i < arguments.length; i++) {
+            var item = arguments[i];
+            if (item && item.stack) str += ' ' + item.stack;
+            else if (item && item.message) str += ' ' + item.message;
+            else str += ' ' + item;
+          }
+          if (str.indexOf('WebSocket') !== -1 && (str.indexOf('closed without opened') !== -1 || str.indexOf('[vite]') !== -1)) {
+            return;
+          }
+          return origConsoleError.apply(console, arguments);
+        };
+
+        var origConsoleWarn = console.warn;
+        console.warn = function() {
+          var str = '';
+          for (var i = 0; i < arguments.length; i++) {
+            var item = arguments[i];
+            str += ' ' + (item && item.message ? item.message : item);
+          }
+          if (str.indexOf('WebSocket') !== -1 && (str.indexOf('closed without opened') !== -1 || str.indexOf('[vite]') !== -1)) {
+            return;
+          }
+          return origConsoleWarn.apply(console, arguments);
+        };
+
+        window.addEventListener('error', function(e) {
+          var msg = (e && (e.message || '')) + '';
+          var file = (e && (e.filename || '')) + '';
+          if (msg.indexOf('WebSocket') !== -1 || file.indexOf('@vite/client') !== -1) {
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            if (e.preventDefault) e.preventDefault();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(e) {
+          var reasonStr = (e && (e.reason ? (e.reason.message || e.reason.stack || e.reason) : '')) + '';
+          if (reasonStr.indexOf('WebSocket') !== -1 || reasonStr.indexOf('@vite/client') !== -1) {
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            if (e.preventDefault) e.preventDefault();
+          }
+        }, true);
+      })();
+    </script>
+    <title>NLU Youth 2026 - Quản lý Hoạt động & Điểm Rèn luyện</title>
+    <meta name="description" content="Hệ thống quản lý hoạt động Đoàn - Hội, tính điểm rèn luyện và xếp loại đoàn viên, sinh viên Đại học Nông Lâm TP.HCM." />
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="theme-color" content="#047857" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NLU Youth" />
+    <meta name="application-name" content="NLU Youth 2026" />
+    <meta name="msapplication-TileColor" content="#047857" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    
+    <!-- PWA Icons & Manifest -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <meta property="og:title" content="NLU Youth 2026 - Quản lý Hoạt động & Điểm Rèn luyện" />
+    <meta property="og:description" content="Hệ thống quản lý hoạt động Đoàn - Hội, tính điểm rèn luyện và xếp loại đoàn viên, sinh viên Đại học Nông Lâm TP.HCM." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/pwa-512x512.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="NLU Youth 2026 - Quản lý Hoạt động & Điểm Rèn luyện" />
+    <meta name="twitter:description" content="Hệ thống quản lý hoạt động Đoàn - Hội, tính điểm rèn luyện và xếp loại đoàn viên, sinh viên Đại học Nông Lâm TP.HCM." />
+    <meta name="twitter:image" content="/pwa-512x512.png" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans transition-colors duration-200">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

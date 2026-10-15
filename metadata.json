@@ -1,0 +1,8 @@
+{
+  "name": "NLU Youth 2026 - Quản lý Hoạt động & Điểm Rèn luyện",
+  "description": "Hệ thống quản lý hoạt động Đoàn - Hội, tính điểm rèn luyện và xếp loại đoàn viên, sinh viên Đại học Nông Lâm TP.HCM.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

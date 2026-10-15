@@ -1,0 +1,351 @@
+{
+  "entities": {
+    "Activity": {
+      "title": "Activity",
+      "description": "A youth union activity or event record organized by school, faculty, or branch class",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique Activity Code (e.g. A001, B001)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Activity Title"
+        },
+        "orgCode": {
+          "type": "string",
+          "description": "Organizing entity code"
+        },
+        "orgName": {
+          "type": "string",
+          "description": "Organizing entity display name"
+        },
+        "branchClass": {
+          "type": "string",
+          "description": "Class code if organized by Chi doan"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Approved", "Pending_L3", "Pending_L4", "Request_Edit", "Rejected"],
+          "description": "Workflow approval status"
+        },
+        "totalLevelScore": {
+          "type": "number",
+          "description": "Total training points awarded"
+        },
+        "officialParticipantCount": {
+          "type": "number",
+          "description": "Number of participants"
+        },
+        "isLocked": {
+          "type": "boolean",
+          "description": "Whether activity is locked by Level 4"
+        },
+        "isDeleted": {
+          "type": "boolean",
+          "description": "Soft deletion flag"
+        },
+        "deletedAt": {
+          "type": "string"
+        },
+        "deletedBy": {
+          "type": "string"
+        },
+        "version": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "updatedBy": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO date string"
+        }
+      },
+      "required": ["id", "title", "orgCode", "status"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student score record with training points and SV5T achievements",
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "description": "Student ID (MSSV unique business key)"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Student full name"
+        },
+        "classCode": {
+          "type": "string",
+          "description": "Class code"
+        },
+        "facultyCode": {
+          "type": "string",
+          "description": "Faculty code"
+        },
+        "membershipType": {
+          "type": "string",
+          "enum": ["DOAN_VIEN", "HOI_VIEN", "SINH_VIEN"]
+        },
+        "totalScore": {
+          "type": "number",
+          "description": "Total score (0-100)"
+        },
+        "activityScore": {
+          "type": "number"
+        },
+        "bonusScore": {
+          "type": "number"
+        },
+        "positionScore": {
+          "type": "number"
+        },
+        "researchScore": {
+          "type": "number"
+        },
+        "rankGrade": {
+          "type": "string"
+        },
+        "isSv5tEligible": {
+          "type": "boolean"
+        },
+        "isDeleted": {
+          "type": "boolean",
+          "description": "Soft deletion flag"
+        },
+        "deletedAt": {
+          "type": "string"
+        },
+        "deletedBy": {
+          "type": "string"
+        },
+        "version": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "updatedBy": {
+          "type": "string"
+        }
+      },
+      "required": ["studentId", "fullName", "classCode", "facultyCode"]
+    },
+    "SystemUserAccount": {
+      "title": "SystemUserAccount",
+      "description": "Authorized Google SSO account with RBAC level and unit scope",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "roleLevel": {
+          "type": "number",
+          "enum": [0, 1, 2, 3, 4]
+        },
+        "orgCode": {
+          "type": "string"
+        },
+        "orgName": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Inactive"]
+        },
+        "isDeleted": {
+          "type": "boolean"
+        }
+      },
+      "required": ["id", "email", "roleLevel", "orgCode", "status"]
+    },
+    "SystemActivityLog": {
+      "title": "SystemActivityLog",
+      "description": "Immutable audit record for Level 4 tracking",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "actionTitle": {
+          "type": "string"
+        },
+        "actionDetail": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "timestamp", "category", "actionTitle"]
+    },
+    "IssuedCertificate": {
+      "title": "IssuedCertificate",
+      "description": "Electronic certificate issued for activity participation and merit achievements",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "activityId": { "type": "string" },
+        "activityTitle": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "classCode": { "type": "string" },
+        "facultyCode": { "type": "string" },
+        "role": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "qrCodeUrl": { "type": "string" }
+      },
+      "required": ["id", "code", "activityId", "studentId", "issueDate"]
+    },
+    "ScoreAuditLog": {
+      "title": "ScoreAuditLog",
+      "description": "Append-only immutable audit trail recording every training score change",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "actionType": { "type": "string" },
+        "actionTitle": { "type": "string" },
+        "scoreDifference": { "type": "number" }
+      },
+      "required": ["id", "timestamp", "studentId", "actionType"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Timestamped attendance record captured via unique QR code session for student activity check-in",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "activityId": { "type": "string" },
+        "activityTitle": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "classCode": { "type": "string" },
+        "facultyCode": { "type": "string" },
+        "checkInTimestamp": { "type": "string" },
+        "sessionToken": { "type": "string" },
+        "status": { "type": "string", "enum": ["Confirmed", "Attended", "Pending"] },
+        "scoreAwarded": { "type": "number" },
+        "recordedBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "activityId", "studentId", "checkInTimestamp", "sessionToken"]
+    },
+    "Target": {
+      "title": "Target",
+      "description": "Master KPI target and criteria item with real-time progress and AI forecasting",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["HOC_THUAT", "TRACH_NHIEM_XA_HOI", "THE_LUC", "KY_NANG", "TO_CHUC_DOAN_HOI"] },
+        "metricType": { "type": "string", "enum": ["NUMBER", "PERCENTAGE"] },
+        "unitOfMeasure": { "type": "string" },
+        "targetValue": { "type": "number" },
+        "currentValue": { "type": "number" },
+        "completionRate": { "type": "number" },
+        "academicYear": { "type": "string" },
+        "level": { "type": "string", "enum": ["TRUONG", "KHOA", "CHI_DOAN_CLB"] },
+        "priorityWeight": { "type": "number" },
+        "isLocked": { "type": "boolean" },
+        "aiForecastStatus": { "type": "string", "enum": ["DAT", "BAO_DONG", "NGUY_CO"] },
+        "aiForecastProbability": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "code", "name", "category", "targetValue", "academicYear"]
+    },
+    "StudentAuditLog": {
+      "title": "StudentAuditLog",
+      "description": "Audit trail logging student data state changes before and after updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "classCode": { "type": "string" },
+        "facultyCode": { "type": "string" },
+        "actionType": { "type": "string" },
+        "actionTitle": { "type": "string" },
+        "performedBy": { "type": "object" },
+        "beforeState": { "type": "object" },
+        "afterState": { "type": "object" },
+        "changedFields": { "type": "array", "items": { "type": "string" } },
+        "reason": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "studentId", "actionType", "actionTitle"]
+    }
+  },
+  "firestore": {
+    "/activities/{activityId}": {
+      "schema": { "$ref": "#/entities/Activity" },
+      "description": "Collection of all youth activities"
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Collection of all student score records"
+    },
+    "/system_accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/SystemUserAccount" },
+      "description": "Collection of system accounts and assigned RBAC permissions"
+    },
+    "/system_activity_logs/{logId}": {
+      "schema": { "$ref": "#/entities/SystemActivityLog" },
+      "description": "Collection of system activity and audit logs (append-only)"
+    },
+    "/score_audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/ScoreAuditLog" },
+      "description": "Collection of training point adjustments (append-only)"
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/StudentAuditLog" },
+      "description": "Collection of detailed student data state changes before and after updates (append-only audit trail)"
+    },
+    "/issued_certificates/{certId}": {
+      "schema": { "$ref": "#/entities/IssuedCertificate" },
+      "description": "Collection of issued electronic certificates"
+    },
+    "/attendance_records/{attendanceId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Collection of student attendance records captured via QR check-in"
+    },
+    "/targets/{targetId}": {
+      "schema": { "$ref": "#/entities/Target" },
+      "description": "Collection of master youth union KPI targets & AI evaluations"
+    },
+    "/system_meta/{metaDocId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "initialized": { "type": "boolean" },
+          "updatedAt": { "type": "string" }
+        }
+      },
+      "description": "System metadata for configuration and synchronization"
+    }
+  }
+}
